@@ -28,6 +28,10 @@ io.on("connection", (socket) => {
     socket.on("answer", ({ roomId, sdp }) => {
         socket.to(roomId).emit("answer", { sdp });
     });
+    
+    socket.on("end" , ({roomId})=>{
+        socket.to(roomId).emit("end")
+    })
 
     socket.on("ice-candidate", ({ roomId, candidate }) => {
         socket.to(roomId).emit("ice-candidate", { candidate });

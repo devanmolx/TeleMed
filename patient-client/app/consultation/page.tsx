@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
 
@@ -15,6 +16,8 @@ export default function ConsultationPage() {
     const [stream, setStream] = useState<MediaStream | null>(null);
     const [micOn, setMicOn] = useState(true);
     const [camOn, setCamOn] = useState(true);
+
+    const router = useRouter();
 
     useEffect(() => {
         const s = io("http://localhost:4000");
@@ -40,16 +43,15 @@ export default function ConsultationPage() {
         s.emit("join-room", { roomId });
 
         s.on("offer", async ({ sdp }) => {
-            await peer.setRemoteDescription(new RTCSessionDescription(sdp));
+            await peer.setRemoteDescription(sdp);
             const answer = await peer.createAnswer();
             await peer.setLocalDescription(answer);
             s.emit("answer", { roomId, sdp: answer });
         });
 
         s.on("answer", async ({ sdp }) => {
-            await peer.setRemoteDescription(new RTCSessionDescription(sdp));
+            await peer.setRemoteDescription(sdp);
         });
-
 
         s.on("ice-candidate", async ({ candidate }) => {
             try {
@@ -59,6 +61,9 @@ export default function ConsultationPage() {
             }
         });
 
+        s.on("end", () => {
+            endCall();
+        })
 
         return () => {
             s.disconnect();
@@ -103,10 +108,17 @@ export default function ConsultationPage() {
     }
 
     const endCall = () => {
+        stream?.getTracks().forEach(track => track.stop());
+        setStream(null);
+
+        if (socket?.connected) socket.emit("end", { roomId });
+
         pc?.close();
         socket?.disconnect();
-        setStream(null);
+
+        router.push("/home");
     };
+
 
     return (
         <div className="flex flex-col items-center justify-center w-full h-screen bg-gray-900 relative">
