@@ -2,9 +2,13 @@ import express from "express"
 import http from "http"
 import { Server } from "socket.io"
 import cors from "cors"
+import patientRouter from "./routes/patientRoute"
 
 const app = express();
 const server = http.createServer(app);
+
+app.use(cors());
+app.use(express.json());
 
 const io = new Server(server, {
     cors: {
@@ -28,8 +32,8 @@ io.on("connection", (socket) => {
     socket.on("answer", ({ roomId, sdp }) => {
         socket.to(roomId).emit("answer", { sdp });
     });
-    
-    socket.on("end" , ({roomId})=>{
+
+    socket.on("end", ({ roomId }) => {
         socket.to(roomId).emit("end")
     })
 
@@ -43,8 +47,7 @@ io.on("connection", (socket) => {
 
 });
 
-app.use(cors());
-app.use(express.json());
+app.use("/patient", patientRouter)
 
 app.get("/", (req, res) => {
     res.status(200).json({ msg: "Hello World!" });

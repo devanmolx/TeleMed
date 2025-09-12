@@ -21,7 +21,7 @@ export default function RootLayout({
       <body className=" flex items-center justify-center">
         <LanguageProvider>
           <AppProvider>
-            <div className="w-full max-w-md bg-white dark:bg-gray-800 shadow-xl min-h-screen">
+            <div className="w-full max-w-md min-h-screen">
               {children}
             </div>
           </AppProvider>
