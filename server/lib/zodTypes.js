@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Gender } from "../generated/prisma"
+import { Gender } from "../generated/prisma/index.js";
 
 const registerType = z.object({
     name: z.string().min(2).max(100),

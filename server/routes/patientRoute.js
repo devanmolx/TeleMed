@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { registerType } from "../lib/zodTypes";
-import prisma from "../lib/prismaClient";
-import bcrypt from "bcrypt";
-import { jwt } from "jsonwebtoken";
+import { registerType } from "../lib/zodTypes.js";
+import prisma from "../lib/prismaClient.js";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 
 const router = Router();
 

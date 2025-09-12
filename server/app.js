@@ -2,7 +2,8 @@ import express from "express"
 import http from "http"
 import { Server } from "socket.io"
 import cors from "cors"
-import patientRouter from "./routes/patientRoute"
+import patientRouter from "./routes/patientRoute.js"
+import doctorRouter from "./routes/doctorRoute.js"
 
 const app = express();
 const server = http.createServer(app);
@@ -48,6 +49,7 @@ io.on("connection", (socket) => {
 });
 
 app.use("/patient", patientRouter)
+app.use("/doctor", doctorRouter)
 
 app.get("/", (req, res) => {
     res.status(200).json({ msg: "Hello World!" });
