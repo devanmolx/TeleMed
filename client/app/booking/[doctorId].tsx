@@ -1,26 +1,10 @@
-import React, { useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, Calendar, Clock, Video, Phone, MessageSquare, Star, Globe, User } from 'lucide-react-native';
-
-const mockDoctor = {
-  id: '1',
-  name: 'Dr. Priya Sharma',
-  specialty: 'General Medicine',
-  languages: ['Hindi', 'English', 'Punjabi'],
-  rating: 4.8,
-  experience: '8 years',
-  consultationFee: 200,
-  image: '👩‍⚕️',
-  bio: 'Experienced general physician with expertise in rural healthcare. Fluent in multiple languages and committed to providing accessible healthcare.',
-  qualifications: ['MBBS', 'MD General Medicine'],
-  availability: {
-    today: ['2:00 PM', '3:30 PM', '4:00 PM', '5:30 PM'],
-    tomorrow: ['10:00 AM', '11:30 AM', '2:00 PM', '3:30 PM', '4:00 PM'],
-    dayAfter: ['9:00 AM', '10:30 AM', '2:00 PM', '4:00 PM']
-  }
-};
+import { DoctorContext, DoctorType } from '@/context/DoctorContext/DoctorContext';
+import dayjs from "dayjs";
 
 const consultationTypes = [
   {
@@ -33,26 +17,26 @@ const consultationTypes = [
     duration: '15-20 mins',
     color: '#22C55E'
   },
-  {
-    id: 'audio',
-    name: 'Audio Call',
-    hindi: 'ऑडियो कॉल',
-    punjabi: 'ਆਡੀਓ ਕਾਲ',
-    icon: Phone,
-    price: 150,
-    duration: '10-15 mins',
-    color: '#3B82F6'
-  },
-  {
-    id: 'chat',
-    name: 'Text Chat',
-    hindi: 'टेक्स्ट चैट',
-    punjabi: 'ਟੈਕਸਟ ਚੈਟ',
-    icon: MessageSquare,
-    price: 100,
-    duration: '24 hours',
-    color: '#8B5CF6'
-  }
+  // {
+  //   id: 'audio',
+  //   name: 'Audio Call',
+  //   hindi: 'ऑडियो कॉल',
+  //   punjabi: 'ਆਡੀਓ ਕਾਲ',
+  //   icon: Phone,
+  //   price: 150,
+  //   duration: '10-15 mins',
+  //   color: '#3B82F6'
+  // },
+  // {
+  //   id: 'chat',
+  //   name: 'Text Chat',
+  //   hindi: 'टेक्स्ट चैट',
+  //   punjabi: 'ਟੈਕਸਟ ਚੈਟ',
+  //   icon: MessageSquare,
+  //   price: 100,
+  //   duration: '24 hours',
+  //   color: '#8B5CF6'
+  // }
 ];
 
 const languages = {
@@ -108,6 +92,10 @@ const languages = {
 
 export default function BookingScreen() {
   const { doctorId } = useLocalSearchParams();
+  const { doctors } = useContext(DoctorContext);
+
+  const [doctor, setDoctor] = useState<DoctorType | null>(null);
+  const [image, setImage] = useState('');
   const [currentLanguage, setCurrentLanguage] = useState<'en' | 'hi' | 'pa'>('en');
   const [selectedDate, setSelectedDate] = useState('today');
   const [selectedTime, setSelectedTime] = useState('');
@@ -116,17 +104,42 @@ export default function BookingScreen() {
 
   const t = languages[currentLanguage];
 
-  const getAvailableSlots = () => {
-    switch (selectedDate) {
-      case 'today':
-        return mockDoctor.availability.today;
-      case 'tomorrow':
-        return mockDoctor.availability.tomorrow;
-      case 'dayAfter':
-        return mockDoctor.availability.dayAfter;
-      default:
-        return [];
+  useEffect(() => {
+    const doctor = doctors.find(doc => doc.id.toString() === doctorId);
+
+    if (doctor) {
+      setDoctor(doctor);
+      if (doctor.gender === 'FEMALE') {
+        setImage('👩‍⚕️');
+      }
+      else {
+        setImage('👨‍⚕️');
+      }
     }
+  }, [doctorId, doctors])
+
+  if (!doctor) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Text>Loading doctor info...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  const getAvailableSlots = () => {
+    if (!doctor) return [];
+
+    let targetDate = dayjs();
+    if (selectedDate === "tomorrow") targetDate = dayjs().add(1, "day");
+    else if (selectedDate === "dayAfter") targetDate = dayjs().add(2, "day");
+
+    return doctor.DoctorAvailability
+      .filter(
+        slot =>
+          dayjs(slot.date).format("YYYY-MM-DD") === targetDate.format("YYYY-MM-DD") &&
+          !slot.isBooked
+      )
+      .map(slot => slot.slot);
   };
 
   const getSelectedConsultation = () => {
@@ -138,14 +151,14 @@ export default function BookingScreen() {
       Alert.alert('Error', t.selectSlot);
       return;
     }
-    
+
     if (!selectedConsultationType) {
       Alert.alert('Error', t.selectConsultation);
       return;
     }
 
     setIsBooking(true);
-    
+
     // Simulate booking API call
     setTimeout(() => {
       setIsBooking(false);
@@ -202,7 +215,7 @@ export default function BookingScreen() {
   const ConsultationTypeCard = ({ type }: { type: any }) => {
     const IconComponent = type.icon;
     const isSelected = selectedConsultationType === type.id;
-    
+
     return (
       <TouchableOpacity
         style={[
@@ -242,21 +255,21 @@ export default function BookingScreen() {
         {/* Doctor Info */}
         <View style={styles.doctorCard}>
           <View style={styles.doctorAvatar}>
-            <Text style={styles.doctorAvatarText}>{mockDoctor.image}</Text>
+            <Text style={styles.doctorAvatarText}>{image}</Text>
           </View>
           <View style={styles.doctorInfo}>
-            <Text style={styles.doctorName}>{mockDoctor.name}</Text>
-            <Text style={styles.doctorSpecialty}>{mockDoctor.specialty}</Text>
+            <Text style={styles.doctorName}>{doctor.name}</Text>
+            <Text style={styles.doctorSpecialty}>{doctor.specialization}</Text>
             <View style={styles.doctorMeta}>
               <View style={styles.ratingContainer}>
                 <Star size={16} color="#F59E0B" fill="#F59E0B" />
-                <Text style={styles.rating}>{mockDoctor.rating}</Text>
+                {/* <Text style={styles.rating}>{mockDoctor.rating}</Text> */}
               </View>
-              <Text style={styles.experience}>{mockDoctor.experience}</Text>
+              <Text style={styles.experience}>{doctor.experience}</Text>
             </View>
             <View style={styles.languageContainer}>
               <Globe size={16} color="#6B7280" />
-              <Text style={styles.languages}>{mockDoctor.languages.join(', ')}</Text>
+              <Text style={styles.languages}>{doctor.language.map(l => l.language).join(', ')}</Text>
             </View>
           </View>
         </View>

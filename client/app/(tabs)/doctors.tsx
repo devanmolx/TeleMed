@@ -1,88 +1,58 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Video, Phone, MessageSquare, Star, Clock, Globe, Search } from 'lucide-react-native';
 import { router } from 'expo-router';
-
-const doctors = [
-  {
-    id: 1,
-    name: 'Dr. Priya Sharma',
-    specialty: 'General Medicine',
-    languages: ['Hindi', 'English', 'Punjabi'],
-    rating: 4.8,
-    available: true,
-    nextSlot: '2:00 PM',
-    experience: '8 years',
-  },
-  {
-    id: 2,
-    name: 'Dr. Rajesh Kumar',
-    specialty: 'Pediatrics',
-    languages: ['Hindi', 'Punjabi'],
-    rating: 4.9,
-    available: true,
-    nextSlot: '3:30 PM',
-    experience: '12 years',
-  },
-  {
-    id: 3,
-    name: 'Dr. Amrita Singh',
-    specialty: 'Gynecology',
-    languages: ['English', 'Hindi'],
-    rating: 4.7,
-    available: false,
-    nextSlot: 'Tomorrow 10:00 AM',
-    experience: '15 years',
-  },
-];
+import { DoctorContext, DoctorType } from '@/context/DoctorContext/DoctorContext';
 
 export default function DoctorsScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCall, setActiveCall] = useState(false);
 
-  const DoctorCard = ({ doctor }: { doctor: any }) => (
+  const { doctors } = useContext(DoctorContext);
+
+  const DoctorCard = ({ doctor }: { doctor: DoctorType }) => (
     <View style={styles.doctorCard}>
       <View style={styles.doctorInfo}>
         <View style={styles.doctorHeader}>
           <Text style={styles.doctorName}>{doctor.name}</Text>
           <View style={styles.ratingContainer}>
             <Star size={16} color="#F59E0B" fill="#F59E0B" />
-            <Text style={styles.rating}>{doctor.rating}</Text>
+            {/* <Text style={styles.rating}>{doctor.rating}</Text> */}
           </View>
         </View>
-        <Text style={styles.specialty}>{doctor.specialty}</Text>
+        <Text style={styles.specialty}>{doctor.specialization}</Text>
         <Text style={styles.experience}>{doctor.experience} experience</Text>
 
         <View style={styles.languageContainer}>
           <Globe size={16} color="#6B7280" />
-          <Text style={styles.languages}>{doctor.languages.join(', ')}</Text>
+          <Text style={styles.languages}>{doctor.language.map(l => l.language).join(', ')}</Text>
         </View>
 
-        <View style={styles.availabilityContainer}>
+        {/* <View style={styles.availabilityContainer}>
           <Clock size={16} color={doctor.available ? '#10B981' : '#EF4444'} />
           <Text style={[styles.nextSlot, { color: doctor.available ? '#10B981' : '#EF4444' }]}>
             {doctor.available ? `Available - ${doctor.nextSlot}` : doctor.nextSlot}
           </Text>
-        </View>
+        </View> */}
       </View>
 
       <View style={styles.callButtons}>
         <TouchableOpacity
           style={[styles.callButton, styles.videoButton]}
           onPress={() => setActiveCall(true)}
-          disabled={!doctor.available}
+        // disabled={!doctor.available}
         >
           <Video size={20} color="#FFFFFF" />
           <Text style={styles.callButtonText}>Video</Text>
         </TouchableOpacity>
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={[styles.callButton, styles.audioButton]}
-          disabled={!doctor.available}
+        // disabled={!doctor.available}
         >
           <Phone size={20} color="#FFFFFF" />
           <Text style={styles.callButtonText}>Audio</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
         <TouchableOpacity
           style={[styles.callButton, styles.chatButton]}
         >

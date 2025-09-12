@@ -3,6 +3,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import DoctorContextProvider from '@/context/DoctorContext/DoctorContextProvider';
 
 export default function RootLayout() {
   useFrameworkReady();
@@ -50,19 +51,21 @@ export default function RootLayout() {
 
   return (
     <>
-      <Stack 
-        screenOptions={{ headerShown: false }}
-        initialRouteName={initialRoute}
-      >
-        <Stack.Screen name="onboarding" />
-        <Stack.Screen name="auth/login" />
-        <Stack.Screen name="auth/register" />
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="booking/[doctorId]" />
-        <Stack.Screen name="symptom-checker" />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
+      <DoctorContextProvider>
+        <Stack
+          screenOptions={{ headerShown: false }}
+          initialRouteName={initialRoute}
+        >
+          <Stack.Screen name="onboarding" />
+          <Stack.Screen name="auth/login" />
+          <Stack.Screen name="auth/register" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="booking/[doctorId]" />
+          <Stack.Screen name="symptom-checker" />
+          <Stack.Screen name="+not-found" />
+        </Stack>
+        <StatusBar style="auto" />
+      </DoctorContextProvider>
     </>
   );
 }
