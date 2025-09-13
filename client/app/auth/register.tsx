@@ -4,6 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { User, Phone, Lock, Eye, EyeOff, Calendar, MapPin, ArrowRight, Heart, ArrowLeft } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import { RegisterRoute } from '@/lib/RouteProvider';
 
 const languages = {
   en: {
@@ -13,6 +15,8 @@ const languages = {
     namePlaceholder: 'Enter your full name',
     phoneLabel: 'Phone Number',
     phonePlaceholder: 'Enter your phone number',
+    emailLabel: 'Email Address',
+    emailPlaceholder: 'Enter your email address',
     ageLabel: 'Age',
     agePlaceholder: 'Enter your age',
     locationLabel: 'Village/City',
@@ -34,6 +38,8 @@ const languages = {
     namePlaceholder: 'अपना पूरा नाम दर्ज करें',
     phoneLabel: 'फोन नंबर',
     phonePlaceholder: 'अपना फोन नंबर दर्ज करें',
+    emailLabel: 'ईमेल पता',
+    emailPlaceholder: 'अपना ईमेल पता दर्ज करें',
     ageLabel: 'उम्र',
     agePlaceholder: 'अपनी उम्र दर्ज करें',
     locationLabel: 'गांव/शहर',
@@ -55,6 +61,8 @@ const languages = {
     namePlaceholder: 'ਆਪਣਾ ਪੂਰਾ ਨਾਮ ਦਾਖਲ ਕਰੋ',
     phoneLabel: 'ਫੋਨ ਨੰਬਰ',
     phonePlaceholder: 'ਆਪਣਾ ਫੋਨ ਨੰਬਰ ਦਾਖਲ ਕਰੋ',
+    emailLabel: 'ਈਮੇਲ ਪਤਾ',
+    emailPlaceholder: 'ਆਪਣਾ ਈਮੇਲ ਪਤਾ ਦਾਖਲ ਕਰੋ',
     ageLabel: 'ਉਮਰ',
     agePlaceholder: 'ਆਪਣੀ ਉਮਰ ਦਾਖਲ ਕਰੋ',
     locationLabel: 'ਪਿੰਡ/ਸ਼ਹਿਰ',
@@ -75,10 +83,12 @@ export default function RegisterScreen() {
   const [currentLanguage, setCurrentLanguage] = useState<'en' | 'hi' | 'pa'>('en');
   const [formData, setFormData] = useState({
     name: '',
+    email: '',
     phone: '',
-    age: '',
-    location: '',
     password: '',
+    age: '',
+    gender: '',
+    location: '',
     confirmPassword: ''
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -106,27 +116,27 @@ export default function RegisterScreen() {
 
   const validateForm = () => {
     const { name, phone, age, location, password, confirmPassword } = formData;
-    
+
     if (!name || !phone || !age || !location || !password || !confirmPassword) {
       Alert.alert('Error', 'Please fill in all fields');
       return false;
     }
-    
+
     if (phone.length !== 10) {
       Alert.alert('Error', 'Please enter a valid 10-digit phone number');
       return false;
     }
-    
+
     if (password.length < 6) {
       Alert.alert('Error', 'Password must be at least 6 characters long');
       return false;
     }
-    
+
     if (password !== confirmPassword) {
       Alert.alert('Error', 'Passwords do not match');
       return false;
     }
-    
+
     return true;
   };
 
@@ -134,25 +144,39 @@ export default function RegisterScreen() {
     if (!validateForm()) return;
 
     setIsLoading(true);
-    
-    // Simulate API call
-    setTimeout(async () => {
-      try {
-        // Mock successful registration
-        await AsyncStorage.setItem('userToken', 'mock-jwt-token');
-        await AsyncStorage.setItem('userPhone', formData.phone);
-        await AsyncStorage.setItem('userName', formData.name);
+
+    try {
+
+
+      const response = await axios.post(RegisterRoute, {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        password: formData.password,
+        age: formData.age,
+        gender: formData.gender,
+        address: formData.location
+      })
+
+      if (response.data.status) {
+
+        await AsyncStorage.setItem('token', response.data.token);
         await AsyncStorage.setItem('isLoggedIn', 'true');
-        
-        setIsLoading(false);
-        Alert.alert('Success', 'Account created successfully!', [
-          { text: 'OK', onPress: () => router.replace('/(tabs)') }
+
+        Alert.alert('Success', 'Account created successfully', [
+          { text: 'OK', onPress: () => router.push('/(tabs)') }
         ]);
-      } catch (error) {
-        setIsLoading(false);
-        Alert.alert('Error', 'Registration failed. Please try again.');
+      } else {
+        Alert.alert('Error', response.data.message || 'Registration failed');
       }
-    }, 2000);
+
+    } catch (error) {
+      Alert.alert('Error', 'Login failed. Please try again.');
+      console.error('Login error:', error);
+    }
+
+    setIsLoading(false);
+
   };
 
   const t = languages[currentLanguage];
@@ -162,18 +186,18 @@ export default function RegisterScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.backButton}
             onPress={() => router.back()}
           >
             <ArrowLeft size={24} color="#1F2937" />
           </TouchableOpacity>
-          
+
           <View style={styles.logoContainer}>
             <Heart size={40} color="#22C55E" />
             <Text style={styles.logoText}>HealthConnect</Text>
           </View>
-          
+
           <Text style={styles.title}>{t.title}</Text>
           <Text style={styles.subtitle}>{t.subtitle}</Text>
         </View>
@@ -190,6 +214,21 @@ export default function RegisterScreen() {
                 placeholder={t.namePlaceholder}
                 value={formData.name}
                 onChangeText={(value) => handleInputChange('name', value)}
+              />
+            </View>
+          </View>
+
+          {/* Phone Number Input */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>{t.emailLabel}</Text>
+            <View style={styles.inputContainer}>
+              <Phone size={20} color="#6B7280" />
+              <TextInput
+                style={styles.textInput}
+                placeholder={t.emailPlaceholder}
+                value={formData.email}
+                onChangeText={(value) => handleInputChange('email', value)}
+                keyboardType="email-address"
               />
             </View>
           </View>
@@ -241,6 +280,32 @@ export default function RegisterScreen() {
             </View>
           </View>
 
+          {/* Gender Input */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Gender</Text>
+            <View style={styles.genderContainer}>
+              {['MALE', 'FEMALE', 'OTHER'].map((option) => (
+                <TouchableOpacity
+                  key={option}
+                  style={[
+                    styles.genderOption,
+                    formData.gender === option && styles.genderOptionSelected
+                  ]}
+                  onPress={() => handleInputChange('gender', option)}
+                >
+                  <Text
+                    style={[
+                      styles.genderText,
+                      formData.gender === option && styles.genderTextSelected
+                    ]}
+                  >
+                    {option}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
           {/* Password Input */}
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>{t.passwordLabel}</Text>
@@ -289,7 +354,7 @@ export default function RegisterScreen() {
           <Text style={styles.termsText}>{t.terms}</Text>
 
           {/* Register Button */}
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.registerButton, isLoading && styles.registerButtonDisabled]}
             onPress={handleRegister}
             disabled={isLoading}
@@ -433,6 +498,32 @@ const styles = StyleSheet.create({
   signInText: {
     fontSize: 16,
     color: '#22C55E',
+    fontWeight: 'bold',
+  },
+  genderContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  genderOption: {
+    flex: 1,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 12,
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+  },
+  genderOptionSelected: {
+    backgroundColor: '#22C55E',
+    borderColor: '#22C55E',
+  },
+  genderText: {
+    fontSize: 16,
+    color: '#1F2937',
+  },
+  genderTextSelected: {
+    color: '#FFFFFF',
     fontWeight: 'bold',
   },
 });

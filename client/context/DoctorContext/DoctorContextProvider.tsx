@@ -15,7 +15,6 @@ const DoctorContextProvider: React.FC<PropType> = ({ children }) => {
             try {
                 const res = await axios.get(AllDoctorsRoute);
                 const data: DoctorType[] = res.data.doctors;
-                console.log("Fetched doctors:", data);
                 setDoctors(data);
             } catch (err) {
                 console.log("Failed to fetch doctors:", err);

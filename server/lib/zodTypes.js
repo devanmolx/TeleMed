@@ -1,16 +1,17 @@
 import { z } from "zod";
-import { Gender } from "../generated/prisma/index.js";
 
 const registerType = z.object({
     name: z.string().min(2).max(100),
     email: z.email(),
+    phone: z.string().length(10),
     password: z.string().min(6).max(100),
-    age: z.number().min(0),
-    gender: z.enum(Gender)
+    age: z.string().transform((val) => parseInt(val, 10)),
+    gender: z.string().transform((val) => val.toUpperCase()),
+    address: z.string().min(3).max(300).optional()
 });
 
 const loginType = z.object({
-    email: z.email(),
+    phone: z.string().length(10),
     password: z.string().min(6).max(100)
 });
 

@@ -4,6 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Eye, EyeOff, Phone, Lock, ArrowRight, Heart } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import { LoginRoute } from '@/lib/RouteProvider';
 
 const languages = {
   en: {
@@ -82,22 +84,30 @@ export default function LoginScreen() {
     }
 
     setIsLoading(true);
-    
-    // Simulate API call
-    setTimeout(async () => {
-      try {
-        // Mock successful login
-        await AsyncStorage.setItem('userToken', 'mock-jwt-token');
-        await AsyncStorage.setItem('userPhone', phoneNumber);
+
+    try {
+
+      const response = await axios.post(LoginRoute, {
+        phone: phoneNumber,
+        password: password
+      })
+
+      if (response.data.status) {
+        console.log('Login successful:', response.data);
+        await AsyncStorage.setItem('token', response.data.token);
         await AsyncStorage.setItem('isLoggedIn', 'true');
-        
-        setIsLoading(false);
         router.replace('/(tabs)');
-      } catch (error) {
-        setIsLoading(false);
-        Alert.alert('Error', 'Login failed. Please try again.');
+      } else {
+        Alert.alert('Error', response.data.message || 'Login failed. Please try again.');
       }
-    }, 2000);
+
+    } catch (error) {
+      Alert.alert('Error', 'Login failed. Please try again.');
+      console.error('Login error:', error);
+    }
+
+    setIsLoading(false);
+
   };
 
   const handleGuestMode = async () => {
@@ -170,7 +180,7 @@ export default function LoginScreen() {
           </TouchableOpacity>
 
           {/* Login Button */}
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
             onPress={handleLogin}
             disabled={isLoading}
