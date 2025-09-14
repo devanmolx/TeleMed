@@ -20,6 +20,7 @@ const io = new Server(server, {
 });
 
 const onlinePatients = new Map();
+const onlineDoctors = new Map();
 
 io.on("connection", (socket) => {
     console.log(`User connected: ${socket.id}`);
@@ -28,6 +29,11 @@ io.on("connection", (socket) => {
         onlinePatients.set(patientId, socket.id);
         console.log("Registered patient:", patientId, "with socket ID:", socket.id);
     })
+
+    socket.on("register-doctor", ({ doctorId }) => {
+        onlineDoctors.set(doctorId, socket.id);
+        console.log("Registered doctor:", doctorId, "with socket ID:", socket.id);
+    });
 
     socket.on("join-room", ({ roomId }) => {
         socket.join(roomId);
