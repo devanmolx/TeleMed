@@ -90,7 +90,6 @@ model Appointment {
   startedAt   DateTime?
   endedAt     DateTime?
 
-  scheduledAt  DateTime
   createdAt    DateTime       @default(now())
   Consultation Consultation[]
 }

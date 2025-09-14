@@ -23,6 +23,26 @@ router.get("/all", async (req, res) => {
 
 })
 
+router.post("/book", async (req, res) => {
+    const { doctorId, patientId, availabilityId } = req.body;
+
+    console.log(doctorId, patientId, availabilityId);
+
+    try {
+        const appointment = await prisma.appointment.create({
+            data: {
+                doctorId,
+                patientId,
+                availabilityId
+            }
+        });
+
+        res.status(201).json({ appointment, status: true });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: "Internal Server Error", status: false });
+    }
+})
 
 
 export default router;

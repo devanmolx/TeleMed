@@ -5,6 +5,9 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, Calendar, Clock, Video, Phone, MessageSquare, Star, Globe, User } from 'lucide-react-native';
 import { DoctorContext, DoctorType } from '@/context/DoctorContext/DoctorContext';
 import dayjs from "dayjs";
+import axios from 'axios';
+import { AppointmentBookingRoute } from '@/lib/RouteProvider';
+import { PatientContext } from '@/context/PatientContext/PatientContext';
 
 const consultationTypes = [
   {
@@ -94,11 +97,14 @@ export default function BookingScreen() {
   const { doctorId } = useLocalSearchParams();
   const { doctors } = useContext(DoctorContext);
 
+  const { patient } = useContext(PatientContext);
+
   const [doctor, setDoctor] = useState<DoctorType | null>(null);
   const [image, setImage] = useState('');
   const [currentLanguage, setCurrentLanguage] = useState<'en' | 'hi' | 'pa'>('en');
   const [selectedDate, setSelectedDate] = useState('today');
   const [selectedTime, setSelectedTime] = useState('');
+  const [availabilityId, setAvailabilityId] = useState<number | null>(null);
   const [selectedConsultationType, setSelectedConsultationType] = useState('');
   const [isBooking, setIsBooking] = useState(false);
 
@@ -139,7 +145,6 @@ export default function BookingScreen() {
           dayjs(slot.date).format("YYYY-MM-DD") === targetDate.format("YYYY-MM-DD") &&
           !slot.isBooked
       )
-      .map(slot => slot.slot);
   };
 
   const getSelectedConsultation = () => {
@@ -147,7 +152,12 @@ export default function BookingScreen() {
   };
 
   const handleBooking = async () => {
-    if (!selectedTime) {
+
+    if (!patient) {
+      return;
+    }
+
+    if (!selectedTime || !availabilityId) {
       Alert.alert('Error', t.selectSlot);
       return;
     }
@@ -160,19 +170,55 @@ export default function BookingScreen() {
     setIsBooking(true);
 
     // Simulate booking API call
-    setTimeout(() => {
+    // setTimeout(() => {
+    //   setIsBooking(false);
+    //   Alert.alert(
+    //     t.bookingConfirmed,
+    //     t.bookingSuccess,
+    //     [
+    //       {
+    //         text: 'OK',
+    //         onPress: () => router.back()
+    //       }
+    //     ]
+    //   );
+    // }, 2000);
+
+    try {
+
+      const response = await axios.post(AppointmentBookingRoute, {
+        patientId: patient.id,
+        doctorId: doctor.id,
+        availabilityId: availabilityId
+      });
+
+      if (response.data.status) {
+        setIsBooking(false);
+        Alert.alert(
+          t.bookingConfirmed,
+          t.bookingSuccess,
+          [
+            {
+              text: 'OK',
+              onPress: () => router.back()
+            }
+          ]
+        );
+        return;
+      }
+      else {
+        Alert.alert('Error', response.data.message || 'Failed to book appointment');
+        setIsBooking(false);
+        return;
+      }
+
+
+    } catch (error) {
+      console.error('Booking error:', error);
+      Alert.alert('Error', 'An error occurred while booking the appointment');
       setIsBooking(false);
-      Alert.alert(
-        t.bookingConfirmed,
-        t.bookingSuccess,
-        [
-          {
-            text: 'OK',
-            onPress: () => router.back()
-          }
-        ]
-      );
-    }, 2000);
+      return;
+    }
   };
 
   const DateButton = ({ dateKey, label }: { dateKey: string, label: string }) => (
@@ -195,19 +241,22 @@ export default function BookingScreen() {
     </TouchableOpacity>
   );
 
-  const TimeSlot = ({ time }: { time: string }) => (
+  const TimeSlot = ({ slot }: { slot: any }) => (
     <TouchableOpacity
       style={[
         styles.timeSlot,
-        selectedTime === time && styles.selectedTimeSlot
+        selectedTime === slot && styles.selectedTimeSlot
       ]}
-      onPress={() => setSelectedTime(time)}
+      onPress={() => {
+        setAvailabilityId(slot.id);
+        setSelectedTime(slot.slot);
+      }}
     >
       <Text style={[
         styles.timeSlotText,
-        selectedTime === time && styles.selectedTimeSlotText
+        selectedTime === slot.slot && styles.selectedTimeSlotText
       ]}>
-        {time}
+        {slot.slot}
       </Text>
     </TouchableOpacity>
   );
@@ -289,8 +338,8 @@ export default function BookingScreen() {
           <Text style={styles.sectionTitle}>{t.selectTime}</Text>
           <View style={styles.timeSlots}>
             {getAvailableSlots().length > 0 ? (
-              getAvailableSlots().map((time, index) => (
-                <TimeSlot key={index} time={time} />
+              getAvailableSlots().map((slot, index) => (
+                <TimeSlot key={index} slot={slot} />
               ))
             ) : (
               <Text style={styles.noSlotsText}>{t.noSlotsAvailable}</Text>
