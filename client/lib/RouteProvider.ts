@@ -1,4 +1,4 @@
-export const BASE_URL = 'http://localhost:4000';
+export const BASE_URL = 'https://5b45f8364650.ngrok-free.app';
 
 export const AllDoctorsRoute = `${BASE_URL}/doctor/all`;
 export const RegisterRoute = `${BASE_URL}/patient/register`;
