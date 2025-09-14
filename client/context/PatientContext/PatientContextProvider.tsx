@@ -11,37 +11,36 @@ interface PropType {
 const PatientContextProvider: React.FC<PropType> = ({ children }) => {
     const [patient, setPatient] = useState<PatientType | null>(null);
 
-    useEffect(() => {
-        async function fetchPatient() {
-            try {
-                const token = await AsyncStorage.getItem("token");
+    async function fetchPatient() {
+        try {
+            const token = await AsyncStorage.getItem("token");
 
-                if (!token) {
-                    return;
-                }
-
-                const res = (await axios.get(MeRoute, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }));
-
-                console.log("Fetched patient data:", res.data);
-
-                if (res.data.status) {
-                    const data: PatientType = res.data.patient;
-                    setPatient(data);
-                }
-            } catch (err) {
-                console.log("Failed to fetch patient:", err);
+            if (!token) {
+                return;
             }
-        }
 
+            const res = (await axios.get(MeRoute, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            }));
+
+            console.log("Fetched patient data:", res.data);
+
+            if (res.data.status) {
+                const data: PatientType = res.data.patient;
+                setPatient(data);
+            }
+        } catch (err) {
+            console.log("Failed to fetch patient:", err);
+        }
+    }
+    useEffect(() => {
         fetchPatient();
     }, []);
 
     return (
-        <PatientContext.Provider value={{ patient, setPatient }}>
+        <PatientContext.Provider value={{ patient, setPatient, fetchPatient }}>
             {children}
         </PatientContext.Provider>
     );

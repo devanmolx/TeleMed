@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, TextInput, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -6,6 +6,7 @@ import { Eye, EyeOff, Phone, Lock, ArrowRight, Heart } from 'lucide-react-native
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { LoginRoute } from '@/lib/RouteProvider';
+import { PatientContext } from '@/context/PatientContext/PatientContext';
 
 const languages = {
   en: {
@@ -58,6 +59,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const { fetchPatient } = useContext(PatientContext);
 
   React.useEffect(() => {
     loadLanguage();
@@ -93,6 +95,9 @@ export default function LoginScreen() {
         console.log('Login successful:', response.data);
         await AsyncStorage.setItem('token', response.data.token);
         await AsyncStorage.setItem('isLoggedIn', 'true');
+
+        await fetchPatient();
+
         router.replace('/(tabs)');
       } else {
         Alert.alert('Error', response.data.message || 'Login failed. Please try again.');

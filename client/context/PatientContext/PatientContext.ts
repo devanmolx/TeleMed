@@ -19,11 +19,13 @@ export interface PatientType {
 interface PatientContextType {
     patient: PatientType | null;
     setPatient: (patient: PatientType | null) => void;
+    fetchPatient: () => Promise<void>;
 }
 
 const defaultValues: PatientContextType = {
     patient: null,
     setPatient: () => { },
+    fetchPatient: async () => { },
 };
 
 export const PatientContext = createContext<PatientContextType>(defaultValues);
