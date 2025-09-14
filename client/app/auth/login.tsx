@@ -20,7 +20,6 @@ const languages = {
     noAccount: "Don't have an account?",
     signUp: 'Sign Up',
     or: 'OR',
-    guestMode: 'Continue as Guest',
     loggingIn: 'Signing in...'
   },
   hi: {
@@ -35,7 +34,6 @@ const languages = {
     noAccount: 'खाता नहीं है?',
     signUp: 'साइन अप करें',
     or: 'या',
-    guestMode: 'अतिथि के रूप में जारी रखें',
     loggingIn: 'साइन इन हो रहा है...'
   },
   pa: {
@@ -50,7 +48,6 @@ const languages = {
     noAccount: 'ਖਾਤਾ ਨਹੀਂ ਹੈ?',
     signUp: 'ਸਾਈਨ ਅੱਪ ਕਰੋ',
     or: 'ਜਾਂ',
-    guestMode: 'ਮਹਿਮਾਨ ਵਜੋਂ ਜਾਰੀ ਰੱਖੋ',
     loggingIn: 'ਸਾਈਨ ਇਨ ਹੋ ਰਿਹਾ ਹੈ...'
   }
 };
@@ -108,15 +105,6 @@ export default function LoginScreen() {
 
     setIsLoading(false);
 
-  };
-
-  const handleGuestMode = async () => {
-    try {
-      await AsyncStorage.setItem('isGuest', 'true');
-      router.replace('/(tabs)');
-    } catch (error) {
-      Alert.alert('Error', 'Failed to continue as guest');
-    }
   };
 
   const t = languages[currentLanguage];
@@ -197,11 +185,6 @@ export default function LoginScreen() {
             <Text style={styles.dividerText}>{t.or}</Text>
             <View style={styles.dividerLine} />
           </View>
-
-          {/* Guest Mode */}
-          <TouchableOpacity style={styles.guestButton} onPress={handleGuestMode}>
-            <Text style={styles.guestButtonText}>{t.guestMode}</Text>
-          </TouchableOpacity>
         </View>
 
         {/* Sign Up Link */}
@@ -328,18 +311,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     fontSize: 14,
     color: '#6B7280',
-  },
-  guestButton: {
-    borderWidth: 2,
-    borderColor: '#E5E7EB',
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  guestButtonText: {
-    color: '#6B7280',
-    fontSize: 16,
-    fontWeight: '600',
   },
   signUpContainer: {
     flexDirection: 'row',

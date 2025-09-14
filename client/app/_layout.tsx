@@ -29,8 +29,7 @@ export default function RootLayout() {
   const checkAuthStatus = async () => {
     try {
       const loggedIn = await AsyncStorage.getItem('isLoggedIn');
-      const isGuest = await AsyncStorage.getItem('isGuest');
-      setIsLoggedIn(loggedIn === 'true' || isGuest === 'true');
+      setIsLoggedIn(loggedIn === 'true');
     } catch (error) {
       console.error('Error checking auth status:', error);
       setIsLoggedIn(false);
