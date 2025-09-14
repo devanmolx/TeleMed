@@ -38,14 +38,14 @@ export default function DoctorsScreen() {
       </View>
 
       <View style={styles.callButtons}>
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={[styles.callButton, styles.videoButton]}
           onPress={() => setActiveCall(true)}
         // disabled={!doctor.available}
         >
-          <Video size={20} color="#FFFFFF" />
-          <Text style={styles.callButtonText}>Video</Text>
-        </TouchableOpacity>
+          <MessageSquare size={20} color="#FFFFFF" />
+          <Text style={styles.callButtonText}>Chat</Text>
+        </TouchableOpacity> */}
         {/* <TouchableOpacity
           style={[styles.callButton, styles.audioButton]}
         // disabled={!doctor.available}
@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#3B82F6',
   },
   chatButton: {
-    backgroundColor: '#8B5CF6',
+    backgroundColor: '#22C55E',
   },
   bookButton: {
     backgroundColor: '#F97316',

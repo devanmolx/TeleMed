@@ -8,18 +8,26 @@ import doctorRouter from "./routes/doctorRoute.js"
 const app = express();
 const server = http.createServer(app);
 
-app.use(cors());
+app.use(cors({ origin: "*" }));
 app.use(express.json());
 
 const io = new Server(server, {
     cors: {
         origin: "*",
-        methods: ["GET", "POST"]
+        methods: ["GET", "POST"],
+        credentials: true
     }
 });
 
+const onlinePatients = new Map();
+
 io.on("connection", (socket) => {
     console.log(`User connected: ${socket.id}`);
+
+    socket.on("register-patient", ({ patientId }) => {
+        onlinePatients.set(patientId, socket.id);
+        console.log("Registered patient:", patientId, "with socket ID:", socket.id);
+    })
 
     socket.on("join-room", ({ roomId }) => {
         socket.join(roomId);
@@ -45,7 +53,6 @@ io.on("connection", (socket) => {
     socket.on("disconnect", () => {
         console.log("disconnected:", socket.id);
     });
-
 });
 
 app.use("/patient", patientRouter)
