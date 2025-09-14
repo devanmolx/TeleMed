@@ -6,7 +6,7 @@ import { User, Phone, Lock, Eye, EyeOff, Calendar, MapPin, ArrowRight, Heart, Ar
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { RegisterRoute } from '@/lib/RouteProvider';
-import { PatientContext } from '@/context/PatientContext/PatientContext';
+// import { PatientContext } from '@/context/PatientContext/PatientContext';
 
 const languages = {
   en: {
@@ -95,7 +95,7 @@ export default function RegisterScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { fetchPatient } = useContext(PatientContext);
+  // const { fetchPatient } = useContext(PatientContext);
 
   React.useEffect(() => {
     loadLanguage();
@@ -165,7 +165,7 @@ export default function RegisterScreen() {
         await AsyncStorage.setItem('token', response.data.token);
         await AsyncStorage.setItem('isLoggedIn', 'true');
 
-        await fetchPatient();
+        // await fetchPatient();
 
         Alert.alert('Success', 'Account created successfully', [
           { text: 'OK', onPress: () => router.push('/(tabs)') }
