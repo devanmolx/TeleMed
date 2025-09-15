@@ -35,25 +35,39 @@ io.on("connection", (socket) => {
         console.log("Registered doctor:", doctorId, "with socket ID:", socket.id);
     });
 
-    socket.on("join-room", ({ roomId }) => {
-        socket.join(roomId);
-        console.log(socket.id, "joined", roomId);
-    });
+    socket.on("call-patient", async ({ patientId, metadata }) => {
 
-    socket.on("offer", ({ roomId, sdp }) => {
-        socket.to(roomId).emit("offer", { sdp });
-    });
+        const videoRoomId = `room-${socket.id}-${patientId}`;
 
-    socket.on("answer", ({ roomId, sdp }) => {
-        socket.to(roomId).emit("answer", { sdp });
-    });
+        const patientSocketId = onlinePatients.get(patientId);
+        if (!patientSocketId) {
+            socket.emit('call-failed', { reason: 'Patient not online' });
+            return;
+        }
 
-    socket.on("end", ({ roomId }) => {
-        socket.to(roomId).emit("end")
+        io.to(patientSocketId).emit("incoming-call", { from: socket.id, metadata, videoRoomId });
     })
 
-    socket.on("ice-candidate", ({ roomId, candidate }) => {
-        socket.to(roomId).emit("ice-candidate", { candidate });
+    socket.on("accept-call", ({ doctorId, videoRoomId }) => {
+        const doctorSocketId = onlineDoctors.get(doctorId);
+        if (doctorSocketId) {
+            io.to(doctorSocketId).emit("call-accepted", { patientId: socket.data.id, videoRoomId });
+        }
+    })
+
+    socket.on("signal", ({ toUserId, toRole, data }) => {
+        const targetSocketId =
+            toRole === "doctor"
+                ? onlineDoctors.get(toUserId)
+                : onlinePatients.get(toUserId);
+
+        if (targetSocketId) {
+            io.to(targetSocketId).emit("signal", {
+                fromUserId: socket.data.id,
+                fromRole: socket.data.role,
+                data,
+            });
+        }
     });
 
     socket.on("disconnect", () => {

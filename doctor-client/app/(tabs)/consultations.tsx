@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { Video, MessageSquare, Clock, User } from 'lucide-react-native';
 import { useLanguage } from '@/hooks/useLanguage';
 import axios from 'axios';
 import { FetchUpcomingAppointmentsRoute } from '@/lib/RouteProvider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { DoctorContext } from '@/Context/DoctorContext/DoctorContext';
+import { router } from "expo-router";
 
 interface Patient {
   id: number;
@@ -35,6 +37,8 @@ export default function Consultations() {
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
   const [appointments, setAppointments] = useState<Appointment[]>([]);
 
+  const { socket } = useContext(DoctorContext);
+
   const fetchAppointments = async () => {
     const token = await AsyncStorage.getItem('token');
 
@@ -51,9 +55,39 @@ export default function Consultations() {
     }
   };
 
+  const handleCallPatient = (patientId: number) => {
+    const videoRoomId = `room-${Date.now()}-${patientId}`;
+    socket!.emit("call-patient", {
+      patientId,
+      metadata: {
+        doctorName: "Dr. John Doe",
+      },
+      videoRoomId
+    });
+  };
+
   useEffect(() => {
     fetchAppointments();
   }, []);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on("call-failed", ({ reason }) => {
+      console.warn("Call failed:", reason);
+    });
+
+    socket.on("call-accepted", ({ patientId, videoRoomId }) => {
+      console.log("Patient accepted call, room:", videoRoomId);
+      router.push({ pathname: "/videocall", params: { roomId: videoRoomId } });
+    });
+
+    return () => {
+      socket.off("call-failed");
+      socket.off("call-accepted");
+    };
+  }, []);
+
 
   const renderConsultationCard = (appointment: Appointment) => (
     <View key={appointment.id} style={styles.consultationCard}>
@@ -77,7 +111,8 @@ export default function Consultations() {
 
       {activeTab === 'upcoming' && (
         <View style={styles.actionButtons}>
-          <TouchableOpacity style={[styles.actionButton, styles.videoButton]}>
+          <TouchableOpacity style={[styles.actionButton, styles.videoButton]}
+            onPress={() => { handleCallPatient(appointment.patient.id) }}>
             <Video size={18} color="#FFFFFF" />
             <Text style={styles.actionButtonText}>{t('videoCall')}</Text>
           </TouchableOpacity>
@@ -86,8 +121,9 @@ export default function Consultations() {
             <Text style={styles.actionButtonText}>{t('textChat')}</Text>
           </TouchableOpacity>
         </View>
-      )}
-    </View>
+      )
+      }
+    </View >
   );
 
   return (
