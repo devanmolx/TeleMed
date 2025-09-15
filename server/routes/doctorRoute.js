@@ -2,7 +2,7 @@ import { Router } from "express";
 import prisma from "../lib/prismaClient.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-
+import { doctorAuthMiddleware } from "../middleware/doctorAuthMiddleware.js";
 
 const router = Router();
 
@@ -166,6 +166,40 @@ router.post("/book", async (req, res) => {
     } catch (error) {
         console.log(error);
         res.status(500).json({ error: "Internal Server Error", status: false });
+    }
+})
+
+router.get("/appointments/today", doctorAuthMiddleware, async (req, res) => {
+    const doctorId = req.doctorId;
+
+    try {
+
+        const startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0);
+
+        const endOfDay = new Date();
+        endOfDay.setHours(23, 59, 59, 999);
+
+        const appointments = await prisma.appointment.findMany({
+            where: {
+                doctorId: doctorId,
+                availability: {
+                    date: {
+                        gte: startOfDay,
+                        lt: endOfDay
+                    }
+                }
+            },
+            include: {
+                availability: true,
+                patient: true
+            }
+        });
+
+        res.status(200).json({ appointments, status: true });
+    } catch (error) {
+        console.error("Error fetching today's appointments:", error);
+        res.status(500).json({ error: "Internal server error", status: false });
     }
 })
 

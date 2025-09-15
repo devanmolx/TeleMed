@@ -1,7 +1,6 @@
 import jwt from "jsonwebtoken";
 
-
-export const authMiddleware = (req, res, next) => {
+export const doctorAuthMiddleware = (req, res, next) => {
     const authHeader = req.headers.authorization;
 
     if (!authHeader) {
@@ -14,10 +13,10 @@ export const authMiddleware = (req, res, next) => {
     }
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.patientId = decoded.id;
+        const decoded = jwt.verify(token, process.env.JWT_SECRET_DOCTOR);
+        req.doctorId = decoded.id;
         next();
     } catch (error) {
         return res.status(401).json({ msg: "Unauthorized - Invalid token" });
     }
-}
+};

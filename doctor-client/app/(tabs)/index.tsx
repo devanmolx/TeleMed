@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { Calendar, Users, MessageCircle, FileText } from 'lucide-react-native';
 import { useLanguage } from '@/hooks/useLanguage';
 import OfflineIndicator from '@/components/OfflineIndicator';
+import { DoctorContext } from '@/Context/DoctorContext/DoctorContext';
 
 export default function Dashboard() {
   const { t } = useLanguage();
@@ -13,38 +14,51 @@ export default function Dashboard() {
       icon: Calendar,
       color: '#2563EB',
       count: '5',
-      onPress: () => {},
+      onPress: () => { },
     },
     {
       title: t('patientRecords'),
       icon: Users,
       color: '#0891B2',
       count: '142',
-      onPress: () => {},
+      onPress: () => { },
     },
     {
       title: t('messages'),
       icon: MessageCircle,
       color: '#059669',
       count: '8',
-      onPress: () => {},
+      onPress: () => { },
     },
     {
       title: t('prescriptions'),
       icon: FileText,
       color: '#DC2626',
       count: '23',
-      onPress: () => {},
+      onPress: () => { },
     },
   ];
+
+  const { doctor } = useContext(DoctorContext);
+
+  if (!doctor) {
+    return (
+      <View style={styles.container}>
+        <OfflineIndicator />
+        <View style={styles.header}>
+          <Text style={styles.welcome}>Loading...</Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <OfflineIndicator />
-      
+
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <Text style={styles.welcome}>Welcome back, Dr. Singh</Text>
+          <Text style={styles.welcome}>Welcome back, {doctor.name}</Text>
           <Text style={styles.subtitle}>Here's your overview for today</Text>
         </View>
 
@@ -74,7 +88,7 @@ export default function Dashboard() {
 
         <View style={styles.quickActions}>
           <Text style={styles.sectionTitle}>Quick Actions</Text>
-          
+
           <TouchableOpacity style={styles.primaryButton}>
             <Text style={styles.primaryButtonText}>Start Emergency Consultation</Text>
           </TouchableOpacity>

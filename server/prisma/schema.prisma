@@ -83,8 +83,8 @@ model Appointment {
   patient   Patient           @relation(fields: [patientId], references: [id])
   status    AppointmentStatus @default(CONFIRMED)
 
-  availabilityId Int                @unique
-  availability   DoctorAvailability @relation("AppointmentToDoctorAvailability", fields: [availabilityId], references: [id])
+  availabilityId Int
+  availability   DoctorAvailability @relation("DoctorAvailabilityToAppointments", fields: [availabilityId], references: [id])
 
   videoRoomId String?   @unique
   startedAt   DateTime?
@@ -101,8 +101,8 @@ model DoctorAvailability {
   slot     String
   isBooked Boolean  @default(false)
 
-  doctor      Doctor       @relation(fields: [doctorId], references: [id])
-  appointment Appointment? @relation("AppointmentToDoctorAvailability")
+  doctor       Doctor        @relation(fields: [doctorId], references: [id])
+  appointments Appointment[] @relation("DoctorAvailabilityToAppointments")
 }
 
 model Consultation {

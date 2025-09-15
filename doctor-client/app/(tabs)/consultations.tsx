@@ -1,89 +1,85 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
-import { Video, Phone, MessageSquare, Clock, User } from 'lucide-react-native';
+import { Video, MessageSquare, Clock, User } from 'lucide-react-native';
 import { useLanguage } from '@/hooks/useLanguage';
+import axios from 'axios';
+import { FetchUpcomingAppointmentsRoute } from '@/lib/RouteProvider';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-interface Consultation {
-  id: string;
-  patientName: string;
-  patientAge: number;
-  patientGender: string;
-  condition: string;
-  preferredLanguage: string;
-  time: string;
-  type: 'upcoming' | 'past';
+interface Patient {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  age: string;
+}
+
+interface Appointment {
+  id: number;
+  doctorId: number;
+  patientId: number;
+  status: string;
+  availabilityId: number;
+  availability: {
+    id: number;
+    doctorId: number;
+    date: string;
+    slot: string;
+    isBooked: boolean;
+  };
+  patient: Patient;
 }
 
 export default function Consultations() {
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
 
-  const consultations: Consultation[] = [
-    {
-      id: '1',
-      patientName: 'Rajesh Kumar',
-      patientAge: 45,
-      patientGender: 'Male',
-      condition: 'Hypertension Follow-up',
-      preferredLanguage: 'Hindi',
-      time: '10:30 AM',
-      type: 'upcoming',
-    },
-    {
-      id: '2',
-      patientName: 'Preet Kaur',
-      patientAge: 32,
-      patientGender: 'Female',
-      condition: 'Diabetes Management',
-      preferredLanguage: 'Punjabi',
-      time: '11:15 AM',
-      type: 'upcoming',
-    },
-    {
-      id: '3',
-      patientName: 'Amit Sharma',
-      patientAge: 28,
-      patientGender: 'Male',
-      condition: 'Fever and Cold',
-      preferredLanguage: 'English',
-      time: '2:00 PM',
-      type: 'past',
-    },
-  ];
+  const fetchAppointments = async () => {
+    const token = await AsyncStorage.getItem('token');
 
-  const filteredConsultations = consultations.filter(c => c.type === activeTab);
+    try {
+      const res = await axios.get(FetchUpcomingAppointmentsRoute, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        }
+      });
+      console.log('Fetched appointments:', res.data);
+      setAppointments(res.data.appointments);
+    } catch (error) {
+      console.error('Error fetching appointments:', error);
+    }
+  };
 
-  const renderConsultationCard = (consultation: Consultation) => (
-    <View key={consultation.id} style={styles.consultationCard}>
+  useEffect(() => {
+    fetchAppointments();
+  }, []);
+
+  const renderConsultationCard = (appointment: Appointment) => (
+    <View key={appointment.id} style={styles.consultationCard}>
       <View style={styles.cardHeader}>
         <View style={styles.patientInfo}>
-          <Text style={styles.patientName}>{consultation.patientName}</Text>
+          <Text style={styles.patientName}>{appointment.patient.name}</Text>
           <View style={styles.patientDetails}>
             <User size={14} color="#6B7280" />
             <Text style={styles.detailText}>
-              {consultation.patientAge}y, {consultation.patientGender}
+              ID: {appointment.patient.id}
             </Text>
-            <Text style={styles.separator}>•</Text>
-            <Text style={styles.languageText}>{consultation.preferredLanguage}</Text>
           </View>
         </View>
         <View style={styles.timeContainer}>
           <Clock size={16} color="#6B7280" />
-          <Text style={styles.timeText}>{consultation.time}</Text>
+          <Text style={styles.timeText}>{appointment.availability.slot}</Text>
         </View>
       </View>
 
-      <Text style={styles.conditionText}>{consultation.condition}</Text>
+      <Text style={styles.conditionText}>Status: {appointment.status}</Text>
 
       {activeTab === 'upcoming' && (
         <View style={styles.actionButtons}>
           <TouchableOpacity style={[styles.actionButton, styles.videoButton]}>
             <Video size={18} color="#FFFFFF" />
             <Text style={styles.actionButtonText}>{t('videoCall')}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.actionButton, styles.audioButton]}>
-            <Phone size={18} color="#FFFFFF" />
-            <Text style={styles.actionButtonText}>{t('audioCall')}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={[styles.actionButton, styles.chatButton]}>
             <MessageSquare size={18} color="#FFFFFF" />
@@ -119,7 +115,7 @@ export default function Consultations() {
       </View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {filteredConsultations.map(renderConsultationCard)}
+        {appointments.map(renderConsultationCard)}
       </ScrollView>
     </View>
   );
