@@ -64,6 +64,7 @@ export default function Consultations() {
       },
       videoRoomId
     });
+    router.push({ pathname: "/videocall", params: { roomId: videoRoomId } });
   };
 
   useEffect(() => {

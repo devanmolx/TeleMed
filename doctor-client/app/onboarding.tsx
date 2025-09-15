@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { Stethoscope, ArrowRight } from 'lucide-react-native';
 import { useLanguage } from '@/hooks/useLanguage';
 import LanguageSelector from '@/components/LanguageSelector';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Onboarding() {
   const router = useRouter();
@@ -35,7 +36,16 @@ export default function Onboarding() {
     if (currentStep < onboardingSteps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      router.replace('/(tabs)');
+      handleComplete();
+    }
+  };
+
+  const handleComplete = async () => {
+    try {
+      await AsyncStorage.setItem('onboardingCompleted', 'true');
+      router.replace('/auth/login');
+    } catch (error) {
+      console.error('Error saving onboarding data:', error);
     }
   };
 
@@ -44,8 +54,8 @@ export default function Onboarding() {
 
   return (
     <View style={styles.container}>
-      <ScrollView 
-        style={styles.scrollView} 
+      <ScrollView
+        style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
